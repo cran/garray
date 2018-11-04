@@ -2,6 +2,8 @@
 % Please edit documentation in R/main.R
 \name{dim.garray}
 \alias{dim.garray}
+\alias{dim}
+\alias{dim<-}
 \alias{dim<-.garray}
 \title{Dimensions of a generalized array}
 \usage{

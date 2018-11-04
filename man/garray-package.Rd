@@ -11,7 +11,8 @@ Organize a so-called ragged array as generalized arrays, which
 	dimensions (grouping of members within dimensions).
 	By the margins (names of dimensions and sub-dimensions) in generalized
 	arrays, operators and utility functions provided in this package
-	automatically match the margins, doing map-reduce style calculation
+	automatically match the margins,
+	doing map-reduce style parallel computation
 	along margins.  Generalized arrays are also cooperative to R's native
 	functions that work on simple arrays.
 }

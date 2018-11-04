@@ -55,6 +55,9 @@ n1 <- amap(sum,     c,a,b,d,    0.0001, VECTORIZED=FALSE)
 n2 <- amap(sum,     c,a,b,e,    0.0001, VECTORIZED=FALSE)
 n3 <- amap(sum,     c,a,b,e,f,  0.0001, VECTORIZED=FALSE)
 p1 <- amap(sum,     c,a,b,e,f,g,0.0001, VECTORIZED=FALSE)
+q1 <- amap(sum, c,a,b,e,f,g,0.0001, SIMPLIFY=FALSE, VECTORIZED=FALSE)
+q2 <- amap(c,   c,a,b,e,f,g,0.0001, SIMPLIFY=FALSE, VECTORIZED=FALSE)
+q3 <- amap(list,c,a,b,e,f,g,0.0001, SIMPLIFY=FALSE, VECTORIZED=FALSE)
 m1==m2
 m2==m3
 m2==aperm(m3, 3:1)

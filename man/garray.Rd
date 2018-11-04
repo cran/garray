@@ -65,15 +65,17 @@ It is a named list of numeric vectors, each of which indicates the
 lengths of subdivision groups within a dimension.  Every name of the
 list prefixed with a margin of the generalized array. By the matching
 of sdim names and dim names, utility functions figure out which
-dimensions the sub dimensions reside in.  Summary of a vector of the
+dimensions the sub dimensions reside in.  Sum of a vector of the
 list usually equals to the extent of the corresponding dimension.
 If they are not equal and the extent can not be divided exactly
-by the summary, the subdimension is invalid and will be dropped.
+by the sum, the subdimension is invalid and will be dropped.
 If the extent can be divided exactly
-by the summary, the subdimension is still valid but non-canonical.
+by the sum, the subdimension is still valid but non-canonical.
 Non-canonical subdimension can be provided to \code{garray()} and \code{sdim<-}
-as argument, and the two functions can canonicalize it.
-Other utility functions cannot handle non-canonical subdimension.
+as argument, and the two functions canonicalize it.
+Other utility functions cannot handle non-canonical subdimension,
+thus manually constructing objects of garray class is permitted but
+dangerous.
 Values of each vector of the list denotes the
 repeating times of subdimension residing in the coresponding dimension
 (called superdim).
@@ -111,6 +113,6 @@ the class
 }}
 
 \examples{
-a1 <- garray(1:27, c(A=3,B=9), sdim=list(A1=c(a=2,b=1),B1=c(a=3)))
-a2 <- garray(1:27, c(A=3,B=9), sdim=list(A1=c(a=2,b=1),B1=c(a=4)))
+a1 <- garray(1:27, c(A=3,B=9), sdim=list(AA=c(a=2,b=1),BB=c(a=3)))
+a2 <- garray(1:27, c(A=3,B=9), sdim=list(AA=c(a=2,b=1),BB=c(a=4)))
 }

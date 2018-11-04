@@ -7,14 +7,16 @@
 \alias{[<-.garray}
 \title{Indexing for the garray class}
 \usage{
-\\method{[}{garray}(..., drop=TRUE)
+\method{[}{garray}(..., drop=TRUE)
+#`[.garray`(..., drop=TRUE)
 #x[i]
 #x[i,j,...,drop=TRUE]
 #x[m]
 #x[l]
 #x[M=i,N=j,...]
 
-\\method{[}{garray}(...) <- value
+#\method{[}{garray}(...) <- value
+#`[<-.garray`(..., value)
 #x[i] <- value
 #x[i,j,...] <- value
 #x[m] <- value
@@ -31,12 +33,15 @@ R's native \code{[}, a garray will become a garray or scalar, never a vector.}
 
 \item{i, j, m, l, M, N, ...}{In addition to the native styles (\code{i}, \code{j}, etc.)
 accepted by \code{[}, can be:
-1.1 - a matrix \code{m} with column names,
-the colnames(.) should be a permutation of margins of the array.
-2.0 - an unnamed list \code{l}, where NULL means to select all.
-2.1 - a named list \code{l}, where NULL means to select all;
-3.1 - arguments with names (\code{M}, \code{N}, etc), where \code{NULL} and missing
+\enumerate{
+\item a matrix \code{m} with column names,
+which (\code{colnames(m)}) is a permutation of margins of the array.
+\item an list \code{l <- list(i,j,...)}, can be unnamed or named,
+where NULL means to select all;
+\item arguments with names (\code{M}, \code{N}, etc), where \code{NULL} and missing
 means to select all.
+}
+
 These extensions make indexing 3 times slower than native indexing.
 Since it is hard to assign MissingArg in list(), at the moment
 MissingArg is only safe in native R subsettting style.
@@ -51,7 +56,7 @@ Indexing along margins as usual \code{[.array}, and along subdim.
 }
 \examples{
 mm <- matrix(c(1:3,1), 2, 2, dimnames=list(NULL, c("B","A")))
-a <- garray(1:27, c(A=3,B=9), sdim=list(A1=c(a=2,b=1),B1=c(a=3)))
+a <- garray(1:27, c(A=3,B=9), sdim=list(AA=c(a=2,b=1),BB=c(a=3)))
 b <- a[mm]
 c1 <- a[B=1:2,A=NULL]
 c2 <- a[B=1:2,A=]
@@ -67,12 +72,16 @@ d5 <- a[,] ; d5[list(B=1:2,A=NULL)] <- c1*10
 d6 <- a[,] ; d6[B=1:2,A=NULL] <- 1
 d7 <- a[,] ; d7[mm] <- 1000
 d8 <- a[,] ; d8[mm] <- 1:2*1000
-e1 <- a[A1=1,drop=FALSE]
-e2 <- a[A1="b",drop=FALSE]
-e3 <- a[,] ; e3[A1="b"] <- e2*10
+e1 <- a[AA=1,drop=FALSE]
+e11 <- a[AA=c(1,1),drop=FALSE]
+e2 <- a[AA="b",drop=FALSE]
+ebb <- a[AA=c("b","b"),drop=FALSE]
+e3 <- a[,] ; e3[AA="b"] <- e2*10
+e33 <- a[,] ; e33[AA=c("b","b")] <- c(e2*0.1, e2*100)
+# Work in the same manner of `e33[c(3,3),] <- c(e2*0.1, e2*100)`.
 e4 <- a[A=c(TRUE,FALSE,FALSE),drop=FALSE]
 e5 <- a[A=TRUE,drop=FALSE]
 e6 <- a[B=c(TRUE,FALSE,FALSE),drop=FALSE]
-e7 <- a[A1=TRUE,drop=FALSE]
-e8 <- a[A1=c(TRUE,FALSE),drop=FALSE]
+e7 <- a[AA=TRUE,drop=FALSE]
+e8 <- a[AA=c(TRUE,FALSE),drop=FALSE]
 }

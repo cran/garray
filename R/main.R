@@ -1,4 +1,5 @@
-options(error=recover)
+#options(error=recover)
+#source("R/zzz.R")
 
 #' Generalized and smart array
 #'
@@ -18,15 +19,17 @@ options(error=recover)
 #'	lengths of subdivision groups within a dimension.  Every name of the
 #'	list prefixed with a margin of the generalized array. By the matching
 #'	of sdim names and dim names, utility functions figure out which
-#'	dimensions the sub dimensions reside in.  Summary of a vector of the
+#'	dimensions the sub dimensions reside in.  Sum of a vector of the
 #'	list usually equals to the extent of the corresponding dimension.
 #'	If they are not equal and the extent can not be divided exactly
-#'	by the summary, the subdimension is invalid and will be dropped.
+#'	by the sum, the subdimension is invalid and will be dropped.
 #'	If the extent can be divided exactly
-#'	by the summary, the subdimension is still valid but non-canonical.
+#'	by the sum, the subdimension is still valid but non-canonical.
 #'	Non-canonical subdimension can be provided to `garray()` and `sdim<-`
-#'	as argument, and the two functions can canonicalize it.
-#'	Other utility functions cannot handle non-canonical subdimension.
+#'	as argument, and the two functions canonicalize it.
+#'	Other utility functions cannot handle non-canonical subdimension,
+#'	thus manually constructing objects of garray class is permitted but
+#'	dangerous.
 #'	Values of each vector of the list denotes the
 #'	repeating times of subdimension residing in the coresponding dimension
 #'	(called superdim). 
@@ -56,10 +59,9 @@ options(error=recover)
 #'	and '?sdim'.
 #' @param x  An R object.
 #' @param ...  Additional arguments to be passed to or from methods.
-#' @aliases garray
 #' @examples
-#'	a1 <- garray(1:27, c(A=3,B=9), sdim=list(A1=c(a=2,b=1),B1=c(a=3)))
-#'	a2 <- garray(1:27, c(A=3,B=9), sdim=list(A1=c(a=2,b=1),B1=c(a=4)))
+#'	a1 <- garray(1:27, c(A=3,B=9), sdim=list(AA=c(a=2,b=1),BB=c(a=3)))
+#'	a2 <- garray(1:27, c(A=3,B=9), sdim=list(AA=c(a=2,b=1),BB=c(a=4)))
 garray <- function(data, dim=NULL, dimnames=NULL,
 		margins=NULL, sdim=attr(data, "sdim", exact=TRUE)) {
 	if (is.null(dim)) {
@@ -261,6 +263,7 @@ remargins <- function(x, value) {
 #' @param x  An generalized array.
 #' @param value  An integer (can be coerced from double numeric) vector, with
 #'	names.
+#' @aliases dim dim<-
 `dim.garray` <- function(x) {
 	d <- NextMethod("dim")
 	names(d) <- margins(x)	# names of dim() is kept by dimnames(). 
@@ -292,10 +295,10 @@ remargins <- function(x, value) {
 #'
 #' Indexing along margins as usual `[.array`, and along subdim.
 #'
-# @name [.garray
-# @aliases [ [<-
+#' @aliases [ [<- [.garray [<-.garray
 #' @usage
-#'	\\method{[}{garray}(..., drop=TRUE)
+#'	\method{[}{garray}(..., drop=TRUE)
+#'	#`[.garray`(..., drop=TRUE)
 #'	#x[i]
 #'	#x[i,j,...,drop=TRUE]
 #'	#x[m]
@@ -305,15 +308,16 @@ remargins <- function(x, value) {
 #' @param x  A generalized array from which elements are extracted or replaced.
 #' @param i,j,m,l,M,N,...  In addition to the native styles (`i`, `j`, etc.)
 #'	accepted by `[`, can be:
-#'	1.1 - a matrix `m` with column names,
-#'	    the colnames(.) should be a permutation of margins of the array.
+#'	1. a matrix `m` with column names,
+#'		which (`colnames(m)`) is a permutation of margins of the array.
 #	    #TODO: a missing margin means select all along that margin
 #	#TODO: 1.2 - the colnames(.) can be from names of sdim, the return
 #	#	will be a list of arrays.
-#'	2.0 - an unnamed list `l`, where NULL means to select all.
-#'	2.1 - a named list `l`, where NULL means to select all;
-#'	3.1 - arguments with names (`M`, `N`, etc), where `NULL` and missing
+#'	2. an list `l <- list(i,j,...)`, can be unnamed or named,
+#'		where NULL means to select all;
+#'	3. arguments with names (`M`, `N`, etc), where `NULL` and missing
 #'		means to select all.
+#'
 #'	These extensions make indexing 3 times slower than native indexing.
 #'	Since it is hard to assign MissingArg in list(), at the moment
 #'	MissingArg is only safe in native R subsettting style.
@@ -325,10 +329,9 @@ remargins <- function(x, value) {
 #' @param drop  Whether indeces where 1==dim are removed.  Different from
 #'	R's native `[`, a garray will become a garray or scalar, never a vector.
 #' @param value  An array or a scalar.
-#' @aliases [ [<-
 #' @examples
 #'	mm <- matrix(c(1:3,1), 2, 2, dimnames=list(NULL, c("B","A")))
-#'	a <- garray(1:27, c(A=3,B=9), sdim=list(A1=c(a=2,b=1),B1=c(a=3)))
+#'	a <- garray(1:27, c(A=3,B=9), sdim=list(AA=c(a=2,b=1),BB=c(a=3)))
 #'	b <- a[mm]
 #'	c1 <- a[B=1:2,A=NULL]
 #'	c2 <- a[B=1:2,A=]
@@ -344,14 +347,18 @@ remargins <- function(x, value) {
 #'	d6 <- a[,] ; d6[B=1:2,A=NULL] <- 1
 #'	d7 <- a[,] ; d7[mm] <- 1000
 #'	d8 <- a[,] ; d8[mm] <- 1:2*1000
-#'	e1 <- a[A1=1,drop=FALSE]
-#'	e2 <- a[A1="b",drop=FALSE]
-#'	e3 <- a[,] ; e3[A1="b"] <- e2*10
+#'	e1 <- a[AA=1,drop=FALSE]
+#'	e11 <- a[AA=c(1,1),drop=FALSE]
+#'	e2 <- a[AA="b",drop=FALSE]
+#'	ebb <- a[AA=c("b","b"),drop=FALSE]
+#'	e3 <- a[,] ; e3[AA="b"] <- e2*10
+#'	e33 <- a[,] ; e33[AA=c("b","b")] <- c(e2*0.1, e2*100)
+#'	# Work in the same manner of `e33[c(3,3),] <- c(e2*0.1, e2*100)`.
 #'	e4 <- a[A=c(TRUE,FALSE,FALSE),drop=FALSE]
 #'	e5 <- a[A=TRUE,drop=FALSE]
 #'	e6 <- a[B=c(TRUE,FALSE,FALSE),drop=FALSE]
-#'	e7 <- a[A1=TRUE,drop=FALSE]
-#'	e8 <- a[A1=c(TRUE,FALSE),drop=FALSE]
+#'	e7 <- a[AA=TRUE,drop=FALSE]
+#'	e8 <- a[AA=c(TRUE,FALSE),drop=FALSE]
 `[.garray` <- function(..., drop=TRUE) {
 	n <- margins(..1)
 	arg <- match.call()[-c(1:2)]	# fast sys.call() not work for `[`(...)
@@ -393,7 +400,8 @@ remargins <- function(x, value) {
 }
 
 #' @usage
-#'	\\method{[}{garray}(...) <- value
+#'	#\method{[}{garray}(...) <- value
+#'	#`[<-.garray`(..., value)
 #'	#x[i] <- value
 #'	#x[i,j,...] <- value
 #'	#x[m] <- value
@@ -475,9 +483,11 @@ remargins <- function(x, value) {
 			offset <- cumsum(reptimes)-reptimes
 			i <- idx[[k]]
 			if (is.logical(i)) i <- seq_along(reptimes)[i]
-			if (!is.null(i)) l[[spd[k]]] <-
-				do.call("c", lapply(i,
-				function(j) seq_len(reptimes[j])+offset[j]))
+			l[[spd[k]]] <- if (1L<length(i))
+				do.call("c", lapply(i, function(j)
+					seq_len(reptimes[j])+offset[j]))
+				else if (1L==length(i))
+					seq_len(reptimes[i])+offset[i]
 		}
 	}
 	names(l) <- NULL
@@ -952,6 +962,9 @@ read.ctable <- function(file, header, row.names, col.names, ..., storagemode="do
 #' n2 <- amap(sum,     c,a,b,e,    0.0001, VECTORIZED=FALSE)
 #' n3 <- amap(sum,     c,a,b,e,f,  0.0001, VECTORIZED=FALSE)
 #' p1 <- amap(sum,     c,a,b,e,f,g,0.0001, VECTORIZED=FALSE)
+#' q1 <- amap(sum, c,a,b,e,f,g,0.0001, SIMPLIFY=FALSE, VECTORIZED=FALSE)
+#' q2 <- amap(c,   c,a,b,e,f,g,0.0001, SIMPLIFY=FALSE, VECTORIZED=FALSE)
+#' q3 <- amap(list,c,a,b,e,f,g,0.0001, SIMPLIFY=FALSE, VECTORIZED=FALSE)
 #' m1==m2
 #' m2==m3
 #' m2==aperm(m3, 3:1)
@@ -1030,17 +1043,21 @@ amap<- function(FUN, ..., MoreArgs=NULL, SIMPLIFY=TRUE, VECTORIZED=NA) {
 	if (VECTORIZED) {
 		X <- do.call(FUN, c(dots, MoreArgs))
 		dim(X) <- d	#X <- aperm(., n)
-		if (isTRUE(!SIMPLIFY))
-			warning("alwayls return an array for vectorized fun")
 		dimnames(X) <- dn
+		if (isTRUE(!SIMPLIFY))
+			warning("always return an array for vectorized fun")
 	} else {
-		X <- .mapply(FUN, dots, MoreArgs)
-		dim(X) <- d
-		if (isTRUE(SIMPLIFY)) X <- .simplify2array(X)
-		last <- length(dim(X))
-		dnX <- dimnames(X)
-		dim(X) <- c(dim(X)[-last], d)
-		dimnames(X) <- c(dnX[-last], dn)
+		X <- .MAPPLY(FUN, dots, MoreArgs)
+		if (isTRUE(SIMPLIFY)) {
+			X <- .simplify2array(X)
+			last <- length(dim(X))
+			dnX <- dimnames(X)
+			dim(X) <- c(dim(X)[-last], d)
+			dimnames(X) <- c(dnX[-last], dn)
+		} else {
+			dim(X) <- d
+			dimnames(X) <- dn
+		}
 	}
 	class(X) <- "garray"	# garray() is too expensive
 	sdim(X) <- sd
@@ -1077,24 +1094,33 @@ Ops.garray <- function(e1, e2) {	# Not include %*%
 #'	depend on FUN and SIMPLIFY.  If FUN returns a scalar or SIMPLIFY=FALSE,
 #'	then no leading margins.  In MARGIN, subdimension is replaced with superdims.
 #' @examples
-#' a <- garray(matrix(1:24, 4, 6, dimnames=list(X=LETTERS[1:4], 
-#' 	Y=letters[1:6])), sdim=list(XX=c(x1=3,x2=1), YY=c(y1=1,y2=2)))
-#' m1 <- areduce("sum", a, c("X"))
-#' m2 <- areduce(`sum`, a, c("X"))
-#' p1 <- areduce("sum", a, c("YY"))
-#' p2 <- areduce(`sum`, a, c("YY"))
-#' q1 <- areduce("sum", a, c("X","YY"))
-#' q2 <- areduce(`sum`, a, c("X","YY"))
-#' r1 <- areduce("sum", a, c("XX","YY"))
-#' r2 <- areduce(`sum`, a, c("XX","YY"))
-#' b <- garray(1:24, c(3,4,2), dimnames=list(X=LETTERS[1:3], 
-#'      Y=letters[1:4],Z=NULL), sdim=list(XX=c(x1=2,x2=1), YY=c(y1=1,y2=1)))
-#' s1 <- areduce("sum", b, c("XX","YY","Z"))
-#' s2 <- areduce(`sum`, b, c("XX","YY","Z"))
-#' t1 <- areduce(`identity`, b, c("XX","YY","Z"), SIMPLIFY=FALSE)
-#' t2 <- areduce("c", b, c("XX","YY","Z"), SIMPLIFY=FALSE)	# not `c`
-#' t3 <- areduce(`identity`, b, c("XX","YY"), SIMPLIFY=FALSE, SAFE=TRUE)
-#' t4 <- areduce(`identity`, b, c("XX","YY"), SIMPLIFY=FALSE, SAFE=FALSE)
+#'	a <- garray(1:24, c(4,6),
+#'		dimnames=list(X=LETTERS[1:4], Y=letters[1:6]),
+#'		sdim=list(XX=c(x1=3,x2=1), YY=c(y1=1,y2=2)))
+#'	x1 <- areduce("sum", a, c("X"))
+#'	x2 <- areduce(`sum`, a, c("X"))
+#'	stopifnot(garray(c(66,72,78,84), margins="X")==x1, x2==x1)
+#'	yy1 <- areduce("sum", a, c("YY"))
+#'	yy2 <- areduce(`sum`, a, c("YY"))
+#'	stopifnot(garray(c(10,68,58,164), margins="Y")==yy1, yy2==yy1)
+#'	xyy1 <- areduce("sum", a, c("X","YY"))
+#'	xyy2 <- areduce(`sum`, a, c("X","YY"))
+#'	stopifnot(xyy1==xyy2)
+#'	xxyy1 <- areduce("sum", a, c("XX","YY"))
+#'	xxyy2 <- areduce(`sum`, a, c("XX","YY"))
+#'	stopifnot(garray(c(6,4,48,20,42,16,120,44), c(X=2,Y=4))==xxyy1)
+#'	stopifnot(xxyy2==xxyy1)
+#'	b <- garray(1:24, c(3,4,2),
+#'		dimnames=list(X=LETTERS[1:3], Y=letters[1:4], Z=NULL),
+#'		sdim=list(XX=c(x1=2,x2=1), YY=c(y1=1,y2=1)))
+#'	xxyyz1 <- areduce("sum", b, c("XX","YY","Z"))
+#'	xxyyz2 <- areduce(`sum`, b, c("XX","YY","Z"))
+#'	stopifnot(xxyyz1==xxyyz2)
+#'	xyz1 <- areduce(identity, b, c("XX","YY","Z"), SIMPLIFY=FALSE)
+#'	xyz2 <- areduce("c",      b, c("XX","YY","Z"), SIMPLIFY=FALSE)
+#'	xy1 <- areduce(identity, b, c("XX","YY"), SIMPLIFY=FALSE, SAFE=TRUE)
+#'	stopifnot(identical(dimnames(xy1[2,3][[1]]), list(X="C",Y="c",Z=NULL)))
+#'	# garray of lists, cannot use `xyz1==xyz2` etc to compare.
 areduce <- function(FUN, X, MARGIN, ..., SIMPLIFY=TRUE, SAFE=FALSE) {
 	stopifnot(is.garray(X), is.character(MARGIN))
 	n <- margins(X)
@@ -1104,7 +1130,6 @@ areduce <- function(FUN, X, MARGIN, ..., SIMPLIFY=TRUE, SAFE=FALSE) {
 	na.rm <- ifelse(is.null(list(...)$na.rm), FALSE, list(...)$na.rm)
 	if (all(MARGIN%in%n)) {
 		n1 <- n[!n%in%MARGIN]
-		dn1 <- dn[n1]
 		X <- aperm(X, perm=c(n1, MARGIN))
 		d1 <- prod(d[n1])
 		d2 <- prod(d[MARGIN])	# prod(NULL)==1
@@ -1117,7 +1142,7 @@ areduce <- function(FUN, X, MARGIN, ..., SIMPLIFY=TRUE, SAFE=FALSE) {
 				else	# need not set dim(X) <- c(nrow, ncol)
 				FUN(   X,  d1, d2, na.rm)
 			if (isTRUE(!SIMPLIFY)||isTRUE(SAFE)) warning(
-				"alwayls return an array for sum and mean")
+				"always return an array for sum and mean")
 			if (0L<length(MARGIN)) {
 				dim(Z) <- d[MARGIN]
 				dimnames(Z) <- dn[MARGIN]
@@ -1126,18 +1151,13 @@ areduce <- function(FUN, X, MARGIN, ..., SIMPLIFY=TRUE, SAFE=FALSE) {
 			class(X) <- NULL
 			dim(X) <- c(d1, d2)
 			FUN <- match.fun(FUN)
-			Z <- vector("list", d2)
 			if (SAFE) {
-				for (i in seq_along(Z)) {
-					Z[[i]] <- forceAndCall(1, FUN,
-						garray(X[,i], d[n1],
-						dn1, sdim=sd), ...)
-				}	# apply() internally use this loop
+				Z <- .LAPPLY(seq_len(d2), function(i)
+					forceAndCall(1, FUN, garray(X[,i],
+						d[n1], dn[n1], sdim=sd), ...))
 			} else {
-				for (i in seq_along(Z)) {
-					Z[[i]] <- forceAndCall(1, FUN,
-						X[,i], ...)
-				}
+				Z <- .LAPPLY(seq_len(d2), function(i)
+					forceAndCall(1, FUN, X[,i], ...))
 			}
 			if (isTRUE(SIMPLIFY)) Z <- .simplify2array(Z)
 			last <- length(dim(Z))
@@ -1204,13 +1224,12 @@ areduce <- function(FUN, X, MARGIN, ..., SIMPLIFY=TRUE, SAFE=FALSE) {
 				na.rm=na.rm)
 			# group should be integer; if double, result in 0.
 			if (isTRUE(!SIMPLIFY))
-				warning("alwayls return an array for sum")
+				warning("always return an array for sum")
 			dim(Z) <- c(lengths(ngroup), d[n2])
 			dimnames(Z) <- c(ngroup, dn[n2])
 			Z <- aperm(Z, MARGIN)
 		} else {
 			# Implementations UNLIST(Z) - Faster
-			Z <- vector("list", d2)
 			if (SAFE) {
 				nn <- spd[names(sd0)]
 				names(sd0) <- nn
@@ -1221,7 +1240,7 @@ areduce <- function(FUN, X, MARGIN, ..., SIMPLIFY=TRUE, SAFE=FALSE) {
 					offset <- cumsum(reptimes)-reptimes
 					dn[seq_len(reptimes[i])+offset[i]]
 				}
-				f <- function(i, ...) {
+				f <- function(i, XX, ...) {
 					idx <- (i-1L)%%extent1%/%extent2+1L
 					n[n2] <- NULL
 					FUN(aperm(garray(XX[[i]], c(.mapply(
@@ -1231,15 +1250,13 @@ areduce <- function(FUN, X, MARGIN, ..., SIMPLIFY=TRUE, SAFE=FALSE) {
 						NULL), dn[n1]),
 						c(nn, n1), sdim=sd), n), ...)
 				}
-				for (i in seq_len(d2)) {
-					XX <- split(X, group)
-					Z[[i]] <- lapply(seq_along(XX), f, ...)
-				}
+				Z <- .LAPPLY(seq_len(d2), function(i) {
+					XX <- split(X[,i], group)
+					.LAPPLY(seq_along(XX), f, XX, ...)
+				})
 			} else {
-				for (i in seq_len(d2)) {
-					Z[[i]] <- lapply(split(X[,i], group),
-						FUN, ...)
-				}
+				Z <- .LAPPLY(seq_len(d2), function(i)
+					.LAPPLY(split(X[,i], group), FUN, ...))
 			}
 			Z <- do.call("c", Z)
 			# Implementations REP(GROUP) - Slower
