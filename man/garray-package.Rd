@@ -46,7 +46,7 @@ naturally when members among groups are actually similar.
 package:lambda.tools allows block operations but the matching are not
 automatically.
 
-I need to clarify operation on subdimensions means whether
+It is needed to clarify that operation on subdimensions means whether
 operating within every group independently (similar to apply(MARGIN))
 or operating among groups, maintaining the contain of a group
 (apply() achieves this via apply() on the complement margins).
@@ -62,6 +62,19 @@ When some operations concerning comparing among groups, special tricks
 are needed (may be I will implement some of these tricks as
 utility functions in the future, for example, getting the number of
 groups corresponding to a subdimension).
+
+One of the advantages of the library is to do parallel calculation
+automatically.  Map and reduce operations have both serial and
+parallel implementation.  When \code{options(mc.cores)} is set to a value
+no less than 2, the attaching of garray library will triger
+\code{.onAttach()}, which defined \code{.LAPPLY} and \code{.MAPPLY}, which are the
+working horse of \code{amap()} and \code{areduce()}, by the parallel
+implementation.
+To double check (not needed by regular user) the activation of
+parallel, run
+\code{amap(function(x) Sys.getpid(), garray(1:4, margins="I"), "I")}.
+If elements the return are of the same, \code{amap()} runs in serial;
+if they are of different, it runs in parallel.
 
 Design:
 \itemize{

@@ -49,4 +49,6 @@ all.equal(m1, t(m3))
 n1 <- amult(a, c, `*`, sum)
 n2 <- a\%X\%c
 all.equal(n1, n2)
+amult(garray(1:5,margins="I"), garray(1:8,margins="J"))
+amult(garray(1:8,c(I=2,J=4)), garray(1:9,c(K=3,L=3)))
 }
